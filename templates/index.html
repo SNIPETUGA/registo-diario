@@ -185,9 +185,14 @@
       </section>
 
       <!-- Ações -->
+      <!-- Banner modo edição -->
+      <div id="edit-banner" style="display:none; background:#fef3c7; border:1px solid #f59e0b; border-radius:10px; padding:12px 16px; margin-bottom:12px; align-items:center; justify-content:space-between; gap:12px;">
+        <span style="font-size:13px; color:#92400e; font-weight:500;">✏ Modo edição — estás a alterar um registo existente</span>
+        <button onclick="cancelarEdicao()" style="font-size:12px; color:#92400e; border:1px solid #f59e0b; background:transparent; padding:6px 14px; border-radius:6px; cursor:pointer;">Cancelar</button>
+      </div>
       <div class="actions">
         <button class="btn-secondary" onclick="limparFormulario()">Limpar</button>
-        <button class="btn-primary" onclick="guardarRegisto()">Guardar Registo</button>
+        <button class="btn-primary" id="btn-guardar" onclick="guardarRegisto()">Guardar Registo</button>
       </div>
 
     </div><!-- /view-form -->

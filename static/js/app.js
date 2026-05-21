@@ -430,23 +430,87 @@ async function guardarRegisto() {
   };
 
   try {
-    const res = await fetch("/api/registos", {
-      method: "POST",
+    const url    = modoEdicaoId ? `/api/registos/${modoEdicaoId}` : "/api/registos";
+    const method = modoEdicaoId ? "PUT" : "POST";
+    const res = await fetch(url, {
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(dados),
     });
     const json = await res.json();
     if (res.ok) {
-      showToast("✓ Registo guardado! (Folha nº" + dados.numero + ")");
-      // incrementa nº folha
-      const nAtual = parseInt(val("numero")) || 0;
-      $("numero").value = nAtual + 1;
+      if (modoEdicaoId) {
+        showToast("✓ Registo atualizado! (Folha nº" + dados.numero + ")");
+        cancelarEdicao();
+      } else {
+        showToast("✓ Registo guardado! (Folha nº" + dados.numero + ")");
+        const nAtual = parseInt(val("numero")) || 0;
+        $("numero").value = nAtual + 1;
+      }
     } else {
       showToast("Erro ao guardar: " + (json.erro || "erro desconhecido"), true);
     }
   } catch (e) {
     showToast("Erro de ligação ao servidor", true);
   }
+}
+
+// ── MODO EDIÇÃO ──────────────────────────────────────────────────────────
+let modoEdicaoId = null; // null = novo registo, número = a editar
+
+async function editarRegisto(id) {
+  showToast("A carregar registo...");
+  const res = await fetch(`/api/registos/${id}`);
+  const r = await res.json();
+
+  limparFormulario();
+
+  // preenche campos simples
+  const campos = [
+    "data","central","carro_n","marca","matricula","empresa","numero",
+    "hora_entrada","hora_almoco","hora_saida","horas_extras",
+    "km_inicio","km_fim","km_percorridos",
+    "horas_iniciais_motor","horas_finais_motor",
+    "horas_iniciais_bomba","horas_finais_bomba",
+    "hora_ligou","hora_desligou","horas_motor_desligou",
+    "motorista_nome","responsavel","observacoes",
+    "oleo_motor_notas","oleo_sis_notas","agua_rad_notas",
+  ];
+  campos.forEach(id => { if ($(id) && r[id] !== undefined) $(id).value = r[id] || ""; });
+
+  // checkboxes
+  const checks = [
+    "viatura_limpa_int","viatura_limpa_ext","viatura_lubrificada",
+    "oleo_motor_ok","oleo_motor_naook","oleo_sis_ok","oleo_sis_naook",
+    "agua_rad_ok","agua_rad_naook",
+  ];
+  checks.forEach(id => { if ($(id)) $(id).checked = !!r[id]; });
+
+  // obras
+  (r.obras || []).forEach(o => addObra(o));
+
+  // gasóleo
+  (r.gasoleo || []).forEach(g => addGasoleo(g));
+
+  // activa modo edição
+  modoEdicaoId = id;
+  $("btn-guardar").textContent = "Guardar Alterações";
+  $("btn-guardar").style.background = "#d97706"; // laranja para distinguir
+  $("edit-banner").style.display = "flex";
+
+  // vai para o formulário
+  showView("form");
+  window.scrollTo(0, 0);
+  showToast("A editar folha nº" + r.numero);
+}
+
+function cancelarEdicao() {
+  modoEdicaoId = null;
+  $("btn-guardar").textContent = "Guardar Registo";
+  $("btn-guardar").style.background = "";
+  $("edit-banner").style.display = "none";
+  limparFormulario();
+  preencherComUltimoRegisto();
 }
 
 // ── HISTÓRICO ────────────────────────────────────────────────────────────
@@ -471,6 +535,7 @@ async function carregarHistorico() {
             <div class="history-meta">${r.n_obras} obra(s) · ${r.total_m3} m³ total</div>
           </div>
           <div class="history-actions">
+            <button class="btn-edit" onclick="editarRegisto(${r.id})">✏ Editar</button>
             <button class="btn-pdf" onclick="exportarPDF(${r.id}, '${r.data}', '${r.numero}')">⬇ PDF</button>
             <button class="btn-danger" style="font-size:18px" onclick="apagarRegisto(${r.id})" title="Apagar">×</button>
           </div>

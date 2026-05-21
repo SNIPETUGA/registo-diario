@@ -173,6 +173,80 @@ def obter_registo(registo_id):
     return jsonify(dados)
 
 
+@app.route("/api/registos/<int:registo_id>", methods=["PUT"])
+def atualizar_registo(registo_id):
+    dados = request.get_json()
+    obras_json   = json.dumps(dados.get("obras", []))
+    gasoleo_json = json.dumps(dados.get("gasoleo", []))
+
+    conn = get_db()
+    conn.execute("""
+        UPDATE registos SET
+            data=:data, central=:central, carro_n=:carro_n, marca=:marca,
+            matricula=:matricula, empresa=:empresa,
+            hora_entrada=:hora_entrada, hora_almoco=:hora_almoco,
+            hora_saida=:hora_saida, horas_extras=:horas_extras,
+            km_inicio=:km_inicio, km_fim=:km_fim, km_percorridos=:km_percorridos,
+            horas_finais_motor=:horas_finais_motor, horas_finais_bomba=:horas_finais_bomba,
+            horas_iniciais_motor=:horas_iniciais_motor, horas_iniciais_bomba=:horas_iniciais_bomba,
+            hora_ligou=:hora_ligou, hora_desligou=:hora_desligou,
+            horas_motor_desligou=:horas_motor_desligou,
+            motorista_nome=:motorista_nome, numero=:numero,
+            assinatura=:assinatura, responsavel=:responsavel,
+            viatura_limpa_int=:viatura_limpa_int, viatura_limpa_ext=:viatura_limpa_ext,
+            viatura_lubrificada=:viatura_lubrificada,
+            oleo_motor_ok=:oleo_motor_ok, oleo_motor_naook=:oleo_motor_naook, oleo_motor_notas=:oleo_motor_notas,
+            oleo_sis_ok=:oleo_sis_ok, oleo_sis_naook=:oleo_sis_naook, oleo_sis_notas=:oleo_sis_notas,
+            agua_rad_ok=:agua_rad_ok, agua_rad_naook=:agua_rad_naook, agua_rad_notas=:agua_rad_notas,
+            observacoes=:observacoes, obras=:obras, gasoleo=:gasoleo
+        WHERE id=:id
+    """, {
+        "id":                   registo_id,
+        "data":                 dados.get("data", ""),
+        "central":              dados.get("central", ""),
+        "carro_n":              dados.get("carro_n", ""),
+        "marca":                dados.get("marca", ""),
+        "matricula":            dados.get("matricula", ""),
+        "empresa":              dados.get("empresa", ""),
+        "hora_entrada":         dados.get("hora_entrada", ""),
+        "hora_almoco":          dados.get("hora_almoco", ""),
+        "hora_saida":           dados.get("hora_saida", ""),
+        "horas_extras":         dados.get("horas_extras", ""),
+        "km_inicio":            dados.get("km_inicio", ""),
+        "km_fim":               dados.get("km_fim", ""),
+        "km_percorridos":       dados.get("km_percorridos", ""),
+        "horas_finais_motor":   dados.get("horas_finais_motor", ""),
+        "horas_finais_bomba":   dados.get("horas_finais_bomba", ""),
+        "horas_iniciais_motor": dados.get("horas_iniciais_motor", ""),
+        "horas_iniciais_bomba": dados.get("horas_iniciais_bomba", ""),
+        "hora_ligou":           dados.get("hora_ligou", ""),
+        "hora_desligou":        dados.get("hora_desligou", ""),
+        "horas_motor_desligou": dados.get("horas_motor_desligou", ""),
+        "motorista_nome":       dados.get("motorista_nome", ""),
+        "numero":               dados.get("numero", ""),
+        "assinatura":           dados.get("assinatura", ""),
+        "responsavel":          dados.get("responsavel", ""),
+        "viatura_limpa_int":    dados.get("viatura_limpa_int", 0),
+        "viatura_limpa_ext":    dados.get("viatura_limpa_ext", 0),
+        "viatura_lubrificada":  dados.get("viatura_lubrificada", 0),
+        "oleo_motor_ok":        dados.get("oleo_motor_ok", 0),
+        "oleo_motor_naook":     dados.get("oleo_motor_naook", 0),
+        "oleo_motor_notas":     dados.get("oleo_motor_notas", ""),
+        "oleo_sis_ok":          dados.get("oleo_sis_ok", 0),
+        "oleo_sis_naook":       dados.get("oleo_sis_naook", 0),
+        "oleo_sis_notas":       dados.get("oleo_sis_notas", ""),
+        "agua_rad_ok":          dados.get("agua_rad_ok", 0),
+        "agua_rad_naook":       dados.get("agua_rad_naook", 0),
+        "agua_rad_notas":       dados.get("agua_rad_notas", ""),
+        "observacoes":          dados.get("observacoes", ""),
+        "obras":                obras_json,
+        "gasoleo":              gasoleo_json,
+    })
+    conn.commit()
+    conn.close()
+    return jsonify({"mensagem": "Registo atualizado com sucesso"})
+
+
 @app.route("/api/registos/<int:registo_id>", methods=["DELETE"])
 def apagar_registo(registo_id):
     conn = get_db()
