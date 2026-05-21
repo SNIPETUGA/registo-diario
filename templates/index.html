@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registo Diário — Pragosa Betão</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-title">
+        <span class="dot"></span>
+        <div>
+          <h1>Registo Diário</h1>
+          <p>Pragosa / Betão</p>
+        </div>
+      </div>
+      <div class="tabs">
+        <button class="tab active" onclick="showView('form')">Novo Registo</button>
+        <button class="tab" onclick="showView('history')">Histórico</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- ═══ FORMULÁRIO ═══ -->
+    <div id="view-form" class="view active">
+
+      <!-- Identificação -->
+      <section class="card">
+        <h2 class="section-title">Identificação</h2>
+        <div class="grid g4">
+          <div class="field"><label>Central</label><input id="central" type="text" value="Caldas" /></div>
+          <div class="field"><label>Carro N.º <span class="req">*</span></label><input id="carro_n" type="text" value="9048" /></div>
+          <div class="field"><label>Marca</label><input id="marca" type="text" value="MAN" /></div>
+          <div class="field"><label>Matrícula <span class="req">*</span></label><input id="matricula" type="text" value="98 HQ 52" /></div>
+        </div>
+        <div class="grid g3" style="margin-top:12px">
+          <div class="field"><label>Empresa</label><input id="empresa" type="text" value="Pragosa Betão" /></div>
+          <div class="field"><label>Data <span class="req">*</span></label><input id="data" type="date" /></div>
+          <div class="field"><label>Nº Folha</label><input id="numero" type="number" value="194" /></div>
+        </div>
+      </section>
+
+      <!-- Quilómetros + Horas Motor -->
+      <section class="card">
+        <h2 class="section-title">Quilómetros &amp; Horas Motor</h2>
+        <div class="grid g3">
+          <div class="field"><label>Km Início <span class="req">*</span></label><input id="km_inicio" type="number" placeholder="ex: 45200" /></div>
+          <div class="field"><label>Km Fim <span class="req">*</span></label><input id="km_fim" type="number" placeholder="ex: 45312" /></div>
+          <div class="field"><label>Km Percorridos</label><input id="km_percorridos" type="number" placeholder="calculado" /></div>
+        </div>
+        <div class="grid g4" style="margin-top:12px">
+          <div class="field"><label>Horas Iniciais Motor</label><input id="horas_iniciais_motor" type="number" /></div>
+          <div class="field"><label>Horas Finais Motor</label><input id="horas_finais_motor" type="number" /></div>
+          <div class="field"><label>Horas Iniciais Bomba</label><input id="horas_iniciais_bomba" type="number" /></div>
+          <div class="field"><label>Horas Finais Bomba</label><input id="horas_finais_bomba" type="number" /></div>
+        </div>
+      </section>
+
+      <!-- Horas do dia -->
+      <section class="card">
+        <h2 class="section-title">Horas do Dia</h2>
+        <div class="grid g4">
+          <div class="field"><label>Hora de Entrada <span class="req">*</span></label><input id="hora_entrada" type="time" /></div>
+          <div class="field"><label>Hora de Almoço <span class="req">*</span></label><input id="hora_almoco" type="time" /></div>
+          <div class="field"><label>Hora de Saída <span class="req">*</span></label><input id="hora_saida" type="time" /></div>
+          <div class="field"><label>Horas Extras</label><input id="horas_extras" type="text" placeholder="ex: 1h30" /></div>
+        </div>
+        <div class="grid g3" style="margin-top:12px">
+          <div class="field"><label>Hora que ligou a viatura</label><input id="hora_ligou" type="time" /></div>
+          <div class="field"><label>Hora que desligou a viatura</label><input id="hora_desligou" type="time" /></div>
+          <div class="field"><label>Nº Horas Motor ao desligar</label><input id="horas_motor_desligou" type="number" /></div>
+        </div>
+      </section>
+
+      <!-- Obras / Descargas -->
+      <section class="card">
+        <h2 class="section-title">Obras / Descargas</h2>
+
+        <!-- Mobile: cartões -->
+        <div id="obras-cards-mobile" style="display:none"></div>
+
+        <!-- Desktop: tabela -->
+        <div class="table-wrapper">
+          <table id="obras-table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Guia Remessa/<br>Nota Serviço/<br>Guia Transporte</th>
+                <th>Designação</th>
+                <th>Bom-<br>beado</th>
+                <th>Di-<br>recto</th>
+                <th>Quant.<br>(m³)</th>
+                <th>Mangueiras/<br>Linha Tubos</th>
+                <th>Hora Saída<br>Central</th>
+                <th>Local da<br>Descarga</th>
+                <th>Hora Chegada<br>à Obra</th>
+                <th>Início de<br>Descarga</th>
+                <th>Fim de<br>Descarga</th>
+                <th>Hora Saída<br>da Obra</th>
+                <th>Hora Chegada<br>Central</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="obras-body"></tbody>
+          </table>
+        </div>
+        <div class="table-footer">
+          <button class="btn-ghost" onclick="addObra()">+ Adicionar obra</button>
+          <span id="total-m3" class="total-badge">Total: 0.0 m³</span>
+        </div>
+      </section>
+
+      <!-- Gasóleo / Óleos -->
+      <section class="card">
+        <h2 class="section-title">Gasóleo / Óleos</h2>
+        <div class="table-wrapper">
+          <table id="gasoleo-table">
+            <thead>
+              <tr>
+                <th>Fornecedor</th>
+                <th>Req. Nº</th>
+                <th>Litros</th>
+                <th>Hora</th>
+                <th>Designação</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="gasoleo-body"></tbody>
+          </table>
+        </div>
+        <button class="btn-ghost" onclick="addGasoleo()" style="margin-top:8px">+ Adicionar linha</button>
+      </section>
+
+      <!-- Verificação -->
+      <section class="card">
+        <h2 class="section-title">Verificação da Viatura</h2>
+        <div class="grid g3">
+          <div>
+            <p class="sublabel">Viatura encontra-se</p>
+            <label class="check-row"><input type="checkbox" id="viatura_limpa_int" /> Limpa Interior</label>
+            <label class="check-row"><input type="checkbox" id="viatura_limpa_ext" /> Limpa Exterior</label>
+            <label class="check-row"><input type="checkbox" id="viatura_lubrificada" /> Lubrificada</label>
+          </div>
+          <div>
+            <p class="sublabel">Verificação diária nível</p>
+            <div class="ver-row">
+              <span>Óleo do Motor</span>
+              <label class="check-inline"><input type="checkbox" id="oleo_motor_ok" /> Ok</label>
+              <label class="check-inline"><input type="checkbox" id="oleo_motor_naook" /> Não Ok</label>
+              <input type="text" id="oleo_motor_notas" placeholder="Notas" class="notas-input" />
+            </div>
+            <div class="ver-row">
+              <span>Óleo Sis. Betoneira/Bomba</span>
+              <label class="check-inline"><input type="checkbox" id="oleo_sis_ok" /> Ok</label>
+              <label class="check-inline"><input type="checkbox" id="oleo_sis_naook" /> Não Ok</label>
+              <input type="text" id="oleo_sis_notas" placeholder="Notas" class="notas-input" />
+            </div>
+            <div class="ver-row">
+              <span>Água do Radiador</span>
+              <label class="check-inline"><input type="checkbox" id="agua_rad_ok" /> Ok</label>
+              <label class="check-inline"><input type="checkbox" id="agua_rad_naook" /> Não Ok</label>
+              <input type="text" id="agua_rad_notas" placeholder="Notas" class="notas-input" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Observações / Avarias</label>
+            <textarea id="observacoes" rows="5" placeholder="Notas, avarias, ocorrências..."></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- Motorista -->
+      <section class="card">
+        <h2 class="section-title">Motorista</h2>
+        <div class="grid g3">
+          <div class="field"><label>Nome</label><input id="motorista_nome" type="text" value="António Soares" /></div>
+          <div class="field"><label>Número</label><input id="numero_motorista" type="text" value="193" /></div>
+          <div class="field"><label>Responsável</label><input id="responsavel" type="text" placeholder="Nome do responsável" /></div>
+        </div>
+      </section>
+
+      <!-- Ações -->
+      <div class="actions">
+        <button class="btn-secondary" onclick="limparFormulario()">Limpar</button>
+        <button class="btn-primary" onclick="guardarRegisto()">Guardar Registo</button>
+      </div>
+
+    </div><!-- /view-form -->
+
+    <!-- ═══ HISTÓRICO ═══ -->
+    <div id="view-history" class="view">
+      <div id="history-list"></div>
+    </div>
+
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
