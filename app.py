@@ -5,8 +5,11 @@ import io
 from datetime import datetime
 from pdf_generator import gerar_pdf
 
-app = Flask(__name__)
-DB = "db/registos.db"
+import os
+
+DB_DIR = os.path.join(os.path.dirname(__file__), "db")
+os.makedirs(DB_DIR, exist_ok=True)
+DB = os.path.join(DB_DIR, "registos.db")
 
 
 def get_db():
@@ -233,3 +236,6 @@ if __name__ == "__main__":
     print("✅ Base de dados iniciada")
     print("🚀 A correr em http://localhost:5000")
     app.run(debug=True)
+else:
+    # produção (gunicorn): inicializa a DB ao importar
+    init_db()
