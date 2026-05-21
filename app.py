@@ -1,20 +1,21 @@
-from flask import Flask, render_template, request, jsonify, send_file
+import os
 import sqlite3
 import json
 import io
-from datetime import datetime
+from flask import Flask, render_template, request, jsonify, send_file
 from pdf_generator import gerar_pdf
 
-import os
-
-DB_DIR = os.path.join(os.path.dirname(__file__), "db")
+# garante que a pasta db existe antes de qualquer coisa
+DB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "db")
 os.makedirs(DB_DIR, exist_ok=True)
 DB = os.path.join(DB_DIR, "registos.db")
+
+app = Flask(__name__)
 
 
 def get_db():
     conn = sqlite3.connect(DB)
-    conn.row_factory = sqlite3.Row  # permite aceder por nome de coluna
+    conn.row_factory = sqlite3.Row
     return conn
 
 
@@ -25,44 +26,22 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             criado_em TEXT DEFAULT (datetime('now')),
             data TEXT NOT NULL,
-            central TEXT,
-            carro_n TEXT,
-            marca TEXT,
-            matricula TEXT,
-            empresa TEXT,
-            hora_entrada TEXT,
-            hora_almoco TEXT,
-            hora_saida TEXT,
-            horas_extras TEXT,
-            km_inicio TEXT,
-            km_fim TEXT,
-            km_percorridos TEXT,
-            horas_finais_motor TEXT,
-            horas_finais_bomba TEXT,
-            horas_iniciais_motor TEXT,
-            horas_iniciais_bomba TEXT,
-            hora_ligou TEXT,
-            hora_desligou TEXT,
-            horas_motor_desligou TEXT,
-            motorista_nome TEXT,
-            numero TEXT,
-            assinatura TEXT,
-            responsavel TEXT,
+            central TEXT, carro_n TEXT, marca TEXT, matricula TEXT, empresa TEXT,
+            hora_entrada TEXT, hora_almoco TEXT, hora_saida TEXT, horas_extras TEXT,
+            km_inicio TEXT, km_fim TEXT, km_percorridos TEXT,
+            horas_finais_motor TEXT, horas_finais_bomba TEXT,
+            horas_iniciais_motor TEXT, horas_iniciais_bomba TEXT,
+            hora_ligou TEXT, hora_desligou TEXT, horas_motor_desligou TEXT,
+            motorista_nome TEXT, numero TEXT, assinatura TEXT, responsavel TEXT,
             viatura_limpa_int INTEGER DEFAULT 0,
             viatura_limpa_ext INTEGER DEFAULT 0,
             viatura_lubrificada INTEGER DEFAULT 0,
-            oleo_motor_ok INTEGER DEFAULT 0,
-            oleo_motor_naook INTEGER DEFAULT 0,
-            oleo_motor_notas TEXT,
-            oleo_sis_ok INTEGER DEFAULT 0,
-            oleo_sis_naook INTEGER DEFAULT 0,
-            oleo_sis_notas TEXT,
-            agua_rad_ok INTEGER DEFAULT 0,
-            agua_rad_naook INTEGER DEFAULT 0,
-            agua_rad_notas TEXT,
+            oleo_motor_ok INTEGER DEFAULT 0, oleo_motor_naook INTEGER DEFAULT 0, oleo_motor_notas TEXT,
+            oleo_sis_ok INTEGER DEFAULT 0, oleo_sis_naook INTEGER DEFAULT 0, oleo_sis_notas TEXT,
+            agua_rad_ok INTEGER DEFAULT 0, agua_rad_naook INTEGER DEFAULT 0, agua_rad_notas TEXT,
             observacoes TEXT,
-            obras TEXT,      -- JSON com lista de obras
-            gasoleo TEXT     -- JSON com lista de abastecimentos
+            obras TEXT,
+            gasoleo TEXT
         )
     """)
     conn.commit()
@@ -80,7 +59,7 @@ def index():
 def listar_registos():
     conn = get_db()
     rows = conn.execute(
-        "SELECT id, data, matricula, viatura_limpa_int, numero, motorista_nome, obras FROM registos ORDER BY data DESC, id DESC"
+        "SELECT id, data, matricula, numero, motorista_nome, obras FROM registos ORDER BY data DESC, id DESC"
     ).fetchall()
     conn.close()
 
@@ -98,15 +77,13 @@ def listar_registos():
             "n_obras": n_obras,
             "total_m3": round(total_m3, 1),
         })
-
     return jsonify(resultado)
 
 
 @app.route("/api/registos", methods=["POST"])
 def criar_registo():
     dados = request.get_json()
-
-    obras_json = json.dumps(dados.get("obras", []))
+    obras_json   = json.dumps(dados.get("obras", []))
     gasoleo_json = json.dumps(dados.get("gasoleo", []))
 
     conn = get_db()
@@ -180,7 +157,6 @@ def criar_registo():
     conn.commit()
     novo_id = cursor.lastrowid
     conn.close()
-
     return jsonify({"id": novo_id, "mensagem": "Registo guardado com sucesso"}), 201
 
 
@@ -189,12 +165,10 @@ def obter_registo(registo_id):
     conn = get_db()
     row = conn.execute("SELECT * FROM registos WHERE id = ?", (registo_id,)).fetchone()
     conn.close()
-
     if not row:
         return jsonify({"erro": "Registo não encontrado"}), 404
-
     dados = dict(row)
-    dados["obras"] = json.loads(dados["obras"] or "[]")
+    dados["obras"]   = json.loads(dados["obras"] or "[]")
     dados["gasoleo"] = json.loads(dados["gasoleo"] or "[]")
     return jsonify(dados)
 
@@ -213,16 +187,12 @@ def exportar_pdf(registo_id):
     conn = get_db()
     row = conn.execute("SELECT * FROM registos WHERE id = ?", (registo_id,)).fetchone()
     conn.close()
-
     if not row:
         return jsonify({"erro": "Registo não encontrado"}), 404
-
     dados = dict(row)
-    dados["obras"] = json.loads(dados["obras"] or "[]")
+    dados["obras"]   = json.loads(dados["obras"] or "[]")
     dados["gasoleo"] = json.loads(dados["gasoleo"] or "[]")
-
     pdf_bytes = gerar_pdf(dados)
-
     return send_file(
         io.BytesIO(pdf_bytes),
         mimetype="application/pdf",
@@ -231,11 +201,9 @@ def exportar_pdf(registo_id):
     )
 
 
+# inicializa DB sempre (tanto em dev como em produção)
+init_db()
+
 if __name__ == "__main__":
-    init_db()
-    print("✅ Base de dados iniciada")
     print("🚀 A correr em http://localhost:5000")
     app.run(debug=True)
-else:
-    # produção (gunicorn): inicializa a DB ao importar
-    init_db()
