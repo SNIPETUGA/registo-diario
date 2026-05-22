@@ -17,6 +17,10 @@ function showView(name) {
   $("view-" + name).classList.add("active");
   document.querySelectorAll(".tab")[name === "form" ? 0 : 1].classList.add("active");
   if (name === "history") carregarHistorico();
+  if (name === "form" && !modoEdicaoId) {
+    limparFormulario();
+    preencherComUltimoRegisto();
+  }
 }
 
 // ── Km percorridos auto-calcula ──────────────────────────────────────────
@@ -30,20 +34,23 @@ function calcKm() {
 
 // ── Pré-preencher com dados do último registo ─────────────────────────────
 async function preencherComUltimoRegisto() {
-  // data de hoje sempre
   $("data").value = new Date().toISOString().split("T")[0];
+
+  // Horas do dia ficam sempre em branco
+  ["hora_entrada","hora_almoco","hora_saida","horas_extras",
+   "hora_ligou","hora_desligou","horas_motor_desligou"].forEach(id => {
+    if ($(id)) $(id).value = "";
+  });
 
   try {
     const res = await fetch("/api/registos");
     const lista = await res.json();
-    if (!lista.length) return; // nenhum registo ainda, fica em branco
+    if (!lista.length) return;
 
-    // busca os dados completos do último registo
     const ultimo = await fetch(`/api/registos/${lista[0].id}`).then(r => r.json());
 
     // Identificação — igual ao último
-    const camposIdent = ["central", "carro_n", "marca", "matricula", "empresa", "numero", "motorista_nome", "responsavel"];
-    camposIdent.forEach(id => {
+    ["central","carro_n","marca","matricula","empresa","motorista_nome","responsavel"].forEach(id => {
       if ($(id) && ultimo[id]) $(id).value = ultimo[id];
     });
 
@@ -53,20 +60,18 @@ async function preencherComUltimoRegisto() {
     // Km iniciais = km finais do último registo
     if (ultimo.km_fim) {
       $("km_inicio").value = ultimo.km_fim;
-      $("km_percorridos").value = "";
       $("km_fim").value = "";
+      $("km_percorridos").value = "";
     }
 
     // Horas motor iniciais = horas motor finais do último registo
     if (ultimo.horas_finais_motor) $("horas_iniciais_motor").value = ultimo.horas_finais_motor;
     if (ultimo.horas_finais_bomba) $("horas_iniciais_bomba").value = ultimo.horas_finais_bomba;
-
-    // Limpa os finais para preenchimento manual
     $("horas_finais_motor").value = "";
     $("horas_finais_bomba").value = "";
 
   } catch (e) {
-    // se falhar, não faz nada — o formulário fica com os valores por defeito
+    // se falhar não faz nada
   }
 }
 
