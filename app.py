@@ -12,11 +12,10 @@ app = Flask(__name__)
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
-    import psycopg2
-    import psycopg2.extras
+    import psycopg
 
     def get_db():
-        conn = psycopg2.connect(DATABASE_URL)
+        conn = psycopg.connect(DATABASE_URL)
         return conn
 
     def init_db():
@@ -49,19 +48,19 @@ if DATABASE_URL:
 
     def db_fetchall(query, params=()):
         conn = get_db()
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur = conn.cursor(row_factory=psycopg.rows.dict_row)
         cur.execute(query, params)
         rows = cur.fetchall()
         cur.close(); conn.close()
-        return [dict(r) for r in rows]
+        return rows
 
     def db_fetchone(query, params=()):
         conn = get_db()
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur = conn.cursor(row_factory=psycopg.rows.dict_row)
         cur.execute(query, params)
         row = cur.fetchone()
         cur.close(); conn.close()
-        return dict(row) if row else None
+        return row
 
     def db_execute(query, params=()):
         conn = get_db()
